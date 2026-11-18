@@ -58,12 +58,12 @@ public sealed partial class EdSimulation
         int id = 0;
         while (true)
         {
-            var interArrival = _config.Arrivals.SampleNext(_env); // NHPP
+            var interArrival = _config.Arrivals.SampleNext(_env); 
             yield return _env.Timeout(interArrival);
 
             var patient = new Patient(
                 id++,
-                _env.Now, // или DateTime, если используешь календарь
+                _env.Now, 
                 SampleTriage(_env.Rand()),
                 IsLowAcuity: _env.Random.NextDouble() < 0.3);
 

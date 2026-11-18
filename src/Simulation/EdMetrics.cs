@@ -3,7 +3,7 @@ using src.Domain;
 
 namespace src.Simulation
 {
-    // EdSim.Simulation/EdMetrics.cs
+   
     public sealed class EdMetrics
     {
         private readonly List<double> _dtdt = new();
@@ -29,7 +29,7 @@ namespace src.Simulation
             BoardingMeanMinutes: 5,
             TotalPatients: 5,
             LwbsRate: _totalPatients > 0 ? (double)_lwbsCount / _totalPatients : 0,
-            // ... остальное
+          
             );
     }
 }
