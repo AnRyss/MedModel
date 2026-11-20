@@ -11,4 +11,5 @@ public sealed record SimResult(
     double PhysicianUtilization,
     double SpaceUtilization,
     double BoardingMeanMinutes,
-    int TotalPatients, int LwbsCount);
+    int TotalPatients, 
+    int LwbsCount);

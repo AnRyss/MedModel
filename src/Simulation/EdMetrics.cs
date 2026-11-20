@@ -1,35 +1,41 @@
+using MathNet.Numerics.Statistics;
 using MedicalModel.Domain;
+using SimSharp;
 using src.Domain;
 
-namespace src.Simulation
+namespace MedicalModel.Simulation
 {
-   
     public sealed class EdMetrics
     {
-        private readonly List<double> _dtdt = new();
-        private readonly List<double> _los = new();
-        private readonly List<double> _boarding = new();
+        private readonly List<double> _doorToDoorTime = new();
+        private readonly List<double> _lengthOfStay = new();
+        private readonly List<double> _boardingTime = new();
         private int _lwbsCount;
         private int _totalPatients;
 
-        public void RecordDtdt(Patient p, TimeSpan dt) => _dtdt.Add(dt.TotalMinutes);
-        public void RecordLos(Patient p, TimeSpan los) => _los.Add(los.TotalMinutes);
-        public void RecordBoarding(TimeSpan b) => _boarding.Add(b.TotalMinutes);
-        public void RecordLwbs(Patient p, TimeSpan waited) { _lwbsCount++; _totalPatients++; }
+        public void RecordDtdt(Patient p, TimeSpan dt) => _doorToDoorTime.Add(dt.TotalMinutes);
+        public void RecordLos(Patient p, TimeSpan los) => _lengthOfStay.Add(los.TotalMinutes);
+        public void RecordBoarding(TimeSpan b) => _boardingTime.Add(b.TotalMinutes);
 
-        public SimResult Build(SimConfig config, int seed) => new(
-            ScenarioName: "",   
+        public void RecordLwbs(Patient p, TimeSpan waited)
+        {
+            _lwbsCount++;
+            _totalPatients++;
+        }
+
+        public SimResult Build(SimConfig config, int seed, Resource physicians, Resource spaces) => new(
+            ScenarioName: "",
             Seed: seed,
-            DtdtP50: Percentile(_dtdt, 50),
-            DtdtP95: Percentile(_dtdt, 95),
-            LosP50: Percentile(_los, 50),
-            LosP95: Percentile(_los, 95),
-            PhysicianUtilization: 5,
-            SpaceUtilization: 5,
-            BoardingMeanMinutes: 5,
-            TotalPatients: 5,
+            DtdtP50: _doorToDoorTime.Percentile(50),
+            DtdtP95: _doorToDoorTime.Percentile(95),
+            LosP50: _lengthOfStay.Percentile(50),
+            LosP95: _lengthOfStay.Percentile(95),
             LwbsRate: _totalPatients > 0 ? (double)_lwbsCount / _totalPatients : 0,
-          
-            );
+            PhysicianUtilization: physicians.Utilization.Mean,
+            SpaceUtilization: spaces.Utilization.Mean,
+            BoardingMeanMinutes: _boardingTime.Count > 0 ? _boardingTime.Average() : 0,
+            TotalPatients: _totalPatients,
+            LwbsCount: _lwbsCount
+        );
     }
 }

@@ -3,15 +3,17 @@ using src.Simulation;
 namespace src.Domain
 {
     public sealed record SimConfig(
-        int NumPhysicians,
-        int NumTriageNurses,
-        int NumTreatmentSpaces,
-        int NumInpatientBeds,
-        TimeSpan SimHorizon,
-        TimeSpan Warmup,
+        int NumPhysicians, // кол-во врачей
+        int NumTriageNurses, // Кол-во медсестер
+        int NumTreatmentSpaces, // 
+        int NumInpatientBeds, // Кол-во коек
+        TimeSpan SimHorizon, // Продолжительность симуляции
+        TimeSpan Warmup, // Время на разогрев симуляции
+        double[] TriageProbabilities, // Вероятности появления пациента разной степени тяжести (5 шт.) 
         double LwbsPatienceMinutes, // Терпение пациента (в минутах)
+        double LowAcuityProbability,
         double AdmissionProbability, // доля госпитализированных
-        ArrivalProfile Arrivals, // Насколько часто пациенты приходят днем/ночью.
-        ServiceTimeProfile ServiceTimes // распределения по TriageLevel
+        ArrivalModel ArrivalModel, // Насколько часто пациенты приходят днем/ночью.
+        TriageDistributionModel TriageModel // распределения по TriageLevel
     );
 }

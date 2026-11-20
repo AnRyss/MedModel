@@ -1,10 +1,9 @@
 using System;
 using MedicalModel.Domain;
+using MedicalModel.Simulation;
 using SimSharp;
 using src.Domain;
 using src.Simulation;
-
-
 
 public sealed partial class EdSimulation
 {
@@ -18,7 +17,6 @@ public sealed partial class EdSimulation
     private Resource _triageNurses;
     private Resource _treatmentSpaces;
     private Resource _inpatientBeds;
-    private PriorityQueue _doctorQueue; // приоритетная очередь к врачу
 
     public EdSimulation(SimConfig config, int seed)
     {
@@ -34,7 +32,7 @@ public sealed partial class EdSimulation
         StartPatientGenerator();
         StartWarmupHandler();
         _env.Run(_config.SimHorizon);
-        return _metrics.Build(_config, _seed);
+        return _metrics.Build(_config, _seed, _physicians, _treatmentSpaces);
     }
 
     private void BuildResources()
@@ -45,7 +43,27 @@ public sealed partial class EdSimulation
             WaitingTime = new SampleMonitor("PhysWait", collect: true),
             QueueLength = new TimeSeriesMonitor(_env, "PhysQueue", collect: true),
         };
-        // ... аналогично для остальных
+
+        _triageNurses = new Resource(_env, _config.NumTriageNurses)
+        {
+            Utilization = new TimeSeriesMonitor(_env, "TriageUtil"),
+            WaitingTime = new SampleMonitor("TriageWait", collect: true),
+            QueueLength = new TimeSeriesMonitor(_env, "TriageQueue", collect: true),
+        };
+
+        _treatmentSpaces = new Resource(_env, _config.NumTreatmentSpaces)
+        {
+            Utilization = new TimeSeriesMonitor(_env, "SpaceUtil"),
+            WaitingTime = new SampleMonitor("SpaceWait", collect: true),
+            QueueLength = new TimeSeriesMonitor(_env, "SpaceQueue", collect: true),
+        };
+
+        _inpatientBeds = new Resource(_env, _config.NumInpatientBeds)
+        {
+            Utilization = new TimeSeriesMonitor(_env, "BedUtil"),
+            WaitingTime = new SampleMonitor("BedWait", collect: true),
+            QueueLength = new TimeSeriesMonitor(_env, "BedQueue", collect: true),
+        };
     }
 
     private void StartPatientGenerator()
@@ -58,22 +76,33 @@ public sealed partial class EdSimulation
         int id = 0;
         while (true)
         {
-            var interArrival = _config.Arrivals.SampleNext(_env); 
+            var interArrival = _config.ArrivalModel.SampleTriage();
             yield return _env.Timeout(interArrival);
 
             var patient = new Patient(
                 id++,
-                _env.Now, 
-                SampleTriage(_env.Rand()),
-                IsLowAcuity: _env.Random.NextDouble() < 0.3);
+                _env.Now,
+                _config.TriageModel.SampleTriage(),
+                IsLowAcuity: _env.Rand(new Uniform(0, 1)) < _config.LowAcuityProbability);
 
             _env.Process(PatientJourney(patient));
         }
     }
 
-    private TriageLevel SampleTriage()
+    private IEnumerable<Event> StartWarmupHandler()
     {
-        double u = _env.Rand(new Uniform(0.0, 1.0));
-    }
+        var monitors = new IMonitor[]
+        {
+            _physicians.Utilization, _physicians.WaitingTime, _physicians.QueueLength,
+            _triageNurses.Utilization, _triageNurses.WaitingTime, _triageNurses.QueueLength,
+            _treatmentSpaces.Utilization, _treatmentSpaces.WaitingTime, _treatmentSpaces.QueueLength,
+            _inpatientBeds.Utilization, _inpatientBeds.WaitingTime, _inpatientBeds.QueueLength
+        };
 
+        foreach (var m in monitors) m.Active = false;
+
+        yield return _env.Timeout(_config.Warmup);
+
+        foreach (var m in monitors) m.Active = true;
+    }
 }

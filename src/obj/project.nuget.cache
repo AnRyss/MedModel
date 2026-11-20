@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "LcdZj6Kkpnw=",
+  "dgSpecHash": "MiS3L7oVjvw=",
   "success": true,
   "projectFilePath": "C:\\Users\\stefa\\OneDrive\\Desktop\\MedicalModel\\MedicalModel\\src\\MedicalModel.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\stefa\\.nuget\\packages\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
     "C:\\Users\\stefa\\.nuget\\packages\\simsharp\\3.4.2\\simsharp.3.4.2.nupkg.sha512"
   ],
   "logs": []
