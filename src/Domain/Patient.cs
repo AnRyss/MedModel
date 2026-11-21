@@ -5,6 +5,6 @@ public sealed record Patient(
     int Id,
     DateTime ArrivalTime,
     TriageLevel Triage,
-    bool IsLowAcuity);          // «непрофильный» - мог бы лечиться амбулаторно
+    bool IsLowAcuity);          // TODO: пока не понятно че с этим делать. Нигде не используется
 
 

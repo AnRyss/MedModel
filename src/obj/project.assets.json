@@ -15,6 +15,12 @@
           }
         }
       },
+      "Microsoft.UI.Reactor/0.1.0-preview.18": {
+        "type": "package",
+        "build": {
+          "buildTransitive/Microsoft.UI.Reactor.targets": {}
+        }
+      },
       "SimSharp/3.4.2": {
         "type": "package",
         "compile": {
@@ -53,6 +59,95 @@
         "mathnet.numerics.nuspec"
       ]
     },
+    "Microsoft.UI.Reactor/0.1.0-preview.18": {
+      "sha512": "3qNK52UMVbPdklq+ggTCrpg5cm1xzZc6yN9y2Ak7CoI8w9Sm7y1/h/l4Jd+iSMe5FUtv5pXiz3dTzWxjO+vrSg==",
+      "type": "package",
+      "path": "microsoft.ui.reactor/0.1.0-preview.18",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE",
+        "README.md",
+        "agentkit/SKILL.md",
+        "agentkit/plugins/reactor/.claude-plugin/plugin.json",
+        "agentkit/plugins/reactor/agents/reactor-dev.agent.md",
+        "agentkit/plugins/reactor/plugin.json",
+        "agentkit/plugins/reactor/skills/reactor-advanced/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-async/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-build-and-check/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-charts/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-commanding/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-design/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-devtools/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-docking/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-dsl/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-dsl/references/element-refs.md",
+        "agentkit/plugins/reactor/skills/reactor-dsl/references/keyed-lists.md",
+        "agentkit/plugins/reactor/skills/reactor-dsl/references/reactor.api.txt",
+        "agentkit/plugins/reactor/skills/reactor-forms/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-getting-started/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-input/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-navigation/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-recipes/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/animated-list.md",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/async-fetch-list.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/calendar-multiselect.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/canvas-positioning.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/form-with-validation.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/index.md",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/list-add-delete.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/named-styles.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/sidebar-nav.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/themed-card.cs",
+        "agentkit/plugins/reactor/skills/reactor-recipes/references/use-custom-hook.cs",
+        "agentkit/plugins/reactor/skills/reactor-windowing/SKILL.md",
+        "agentkit/plugins/reactor/skills/reactor-wrapping/SKILL.md",
+        "agentkit/reactor.api.txt",
+        "agentkit/skills/advanced.md",
+        "agentkit/skills/async.md",
+        "agentkit/skills/charts.md",
+        "agentkit/skills/commanding.md",
+        "agentkit/skills/design-docs/code-review-checklist.md",
+        "agentkit/skills/design-docs/control-styles.md",
+        "agentkit/skills/design-docs/layout-and-scaling.md",
+        "agentkit/skills/design-docs/theme-aware-resources.md",
+        "agentkit/skills/design-docs/typography-and-colors.md",
+        "agentkit/skills/design.md",
+        "agentkit/skills/devtools.md",
+        "agentkit/skills/dsl-reference.md",
+        "agentkit/skills/figma.md",
+        "agentkit/skills/forms.md",
+        "agentkit/skills/input.md",
+        "agentkit/skills/navigation.md",
+        "agentkit/skills/perf-tips.md",
+        "agentkit/skills/recipes/async-fetch-list.cs",
+        "agentkit/skills/recipes/calendar-multiselect.cs",
+        "agentkit/skills/recipes/canvas-positioning.cs",
+        "agentkit/skills/recipes/form-with-validation.cs",
+        "agentkit/skills/recipes/index.md",
+        "agentkit/skills/recipes/list-add-delete.cs",
+        "agentkit/skills/recipes/named-styles.cs",
+        "agentkit/skills/recipes/sidebar-nav.cs",
+        "agentkit/skills/recipes/themed-card.cs",
+        "agentkit/skills/threatmodel.md",
+        "agentkit/skills/windowing.md",
+        "analyzers/dotnet/cs/Reactor.Analyzers.dll",
+        "analyzers/dotnet/cs/Reactor.Localization.Generator.dll",
+        "analyzers/dotnet/cs/Reactor.Wrappers.Generator.dll",
+        "build/Microsoft.UI.Reactor.targets",
+        "buildTransitive/Microsoft.UI.Reactor.targets",
+        "buildTransitive/sourcemap/Reactor.SourceMap.Generator.dll",
+        "lib/net10.0-windows10.0.22621/Reactor.Wrappers.Abstractions.dll",
+        "lib/net10.0-windows10.0.22621/Reactor.dll",
+        "lib/net10.0-windows10.0.22621/Reactor.pri",
+        "lib/net10.0-windows10.0.22621/Reactor.xml",
+        "lib/net10.0-windows10.0.22621/Reactor/Hosting/ReactorApplication.xaml",
+        "lib/net10.0-windows10.0.22621/Reactor/Hosting/ReactorApplication.xbf",
+        "microsoft.ui.reactor.0.1.0-preview.18.nupkg.sha512",
+        "microsoft.ui.reactor.nuspec"
+      ]
+    },
     "SimSharp/3.4.2": {
       "sha512": "dc+jSbpemv8rUrmTl2wb4tX8OtNob0CDI5j8n+AbZO8sWNXVC6cwFtiFFkaW9M3t6djCuFEr+LlClRlRKd1grw==",
       "type": "package",
@@ -75,6 +170,7 @@
   "projectFileDependencyGroups": {
     "net10.0": [
       "MathNet.Numerics >= 5.0.0",
+      "Microsoft.UI.Reactor >= 0.1.0-preview.18",
       "SimSharp >= 3.4.2"
     ]
   },
@@ -126,6 +222,10 @@
           "MathNet.Numerics": {
             "target": "Package",
             "version": "[5.0.0, )"
+          },
+          "Microsoft.UI.Reactor": {
+            "target": "Package",
+            "version": "[0.1.0-preview.18, )"
           },
           "SimSharp": {
             "target": "Package",

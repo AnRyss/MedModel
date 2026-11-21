@@ -50,6 +50,10 @@
               "target": "Package",
               "version": "[5.0.0, )"
             },
+            "Microsoft.UI.Reactor": {
+              "target": "Package",
+              "version": "[0.1.0-preview.18, )"
+            },
             "SimSharp": {
               "target": "Package",
               "version": "[3.4.2, )"

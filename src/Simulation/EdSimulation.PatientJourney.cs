@@ -1,62 +1,65 @@
 using SimSharp;
+using System;
 
-
-
-    public sealed partial class EdSimulation
+public sealed partial class EdSimulation
+{
+    private IEnumerable<Event> PatientJourney(Patient patient)
     {
-        private IEnumerable<Event> PatientJourney(Patient patient)
+        var arrivedAt = _env.Now;
+        bool treated = false;
+
+        // 1. ТРИАЖ
+        using (var triage = _triageNurses.Request())
         {
-            var arrivedAt = _env.Now;
-            bool treated = false;
+            yield return triage;
+            yield return _env.Timeout(_triageModel.Triage(patient.Triage));
+        }
 
-            // 1. ТРИАЖ
-            using (var triage = _triageNurses.Request())
+        // 2. ОЖИДАНИЕ ВРАЧА И МЕСТА
+        using (var physician = _physicians.Request())
+        using (var space = _treatmentSpaces.Request())
+        {
+            var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
+            yield return physician | patience;
+
+            if (!physician.IsProcessed)
             {
-                yield return triage;
-                yield return _env.Timeout(_config.ServiceTimes.Triage(patient.Triage));
+                _metrics.RecordLwbs(patient, _env.Now - arrivedAt);
+                yield break;
             }
 
-            // 2. ОЖИДАНИЕ ВРАЧА + LWBS
-            using (var physician = _physicians.Request())
-            using (var space = _treatmentSpaces.Request())
+            yield return space;
+            _metrics.RecordDtdt(patient, _env.Now - arrivedAt);
+            treated = true;
+
+            yield return _env.Timeout(_triageModel.Treatment(patient.Triage));
+
+            bool admit = _env.Rand(new Uniform(0, 1)) < _config.AdmissionProbability;
+
+            if (admit)
             {
-                // Приоритетная очередь: тяжёлые вперёд
-                var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
-                yield return physician | patience;   // ждём либо врача, либо ухода
+                // Ждем койку (Boarding), все еще занимая место в ED
+                var bedReq = _inpatientBeds.Request();
+                var boardingStart = _env.Now;
+                yield return bedReq;
+                _metrics.RecordBoarding(_env.Now - boardingStart);
 
-                if (!physician.IsProcessed)
-                {
-                    // LWBS — ушёл, не дождавшись
-                    _metrics.RecordLwbs(patient, _env.Now - arrivedAt);
-                    yield break;
-                }
-
-                // Дождался врача — фиксируем DTDT
-                _metrics.RecordDtdt(patient, _env.Now - arrivedAt);
-                treated = true;
-
-                yield return space;   // ждём место (может быть быстрее врача)
-                yield return _env.Timeout(_config.ServiceTimes.Treatment(patient.Triage));
-
-                // 3. РЕШЕНИЕ
-                bool admit = _env.Random.NextDouble() < _config.AdmissionProbability;
-
-                if (admit)
-                {
-                    // 4. BOARDING — держим место, ждём койку
-                    using (var bed = _inpatientBeds.Request())
-                    {
-                        var boardingStart = _env.Now;
-                        yield return bed;
-                        _metrics.RecordBoarding(_env.Now - boardingStart);
-                        // Выходим из ED только когда получили койку
-                        yield return _env.Timeout(TimeSpan.FromMinutes(15)); // передача
-                    }
-                }
+                // Запускаем ОТДЕЛЬНЫЙ процесс, который будет держать койку 10 дней.
+                // Место в ED освободится, как только мы выйдем из блока using (space).
+                _env.Process(HoldBed(bedReq));
             }
+        } // Врач и место в ED освободились
 
-            // 5. ВЫХОД
-            if (treated)
-                _metrics.RecordLos(patient, _env.Now - arrivedAt);
+        if (treated)
+            _metrics.RecordLos(patient, _env.Now - arrivedAt);
+    }
+
+    private IEnumerable<Event> HoldBed(Request bedReq)
+    {
+        using (bedReq)
+        {
+            
+            yield return _env.Timeout(_config.BedsOccupiedForDays);
         }
     }
+}

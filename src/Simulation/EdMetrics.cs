@@ -16,15 +16,13 @@ namespace MedicalModel.Simulation
         public void RecordDtdt(Patient p, TimeSpan dt) => _doorToDoorTime.Add(dt.TotalMinutes);
         public void RecordLos(Patient p, TimeSpan los) => _lengthOfStay.Add(los.TotalMinutes);
         public void RecordBoarding(TimeSpan b) => _boardingTime.Add(b.TotalMinutes);
-
-        public void RecordLwbs(Patient p, TimeSpan waited)
-        {
-            _lwbsCount++;
-            _totalPatients++;
-        }
+        
+        public void RecordArrival() => _totalPatients++; 
+        
+        public void RecordLwbs(Patient p, TimeSpan waited) => _lwbsCount++; 
 
         public SimResult Build(SimConfig config, int seed, Resource physicians, Resource spaces) => new(
-            ScenarioName: "",
+            ScenarioName: config.Name,
             Seed: seed,
             DtdtP50: _doorToDoorTime.Percentile(50),
             DtdtP95: _doorToDoorTime.Percentile(95),

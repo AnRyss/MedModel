@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MedicalModel.Domain;
 using MedicalModel.Simulation;
 using SimSharp;
@@ -12,6 +13,10 @@ public sealed partial class EdSimulation
     private readonly EdMetrics _metrics;
     private readonly int _seed;
 
+    // Модели, созданные из данных конфига
+    private readonly ArrivalModel _arrivalModel;
+    private readonly TriageDistributionModel _triageModel;
+
     // Ресурсы
     private Resource _physicians;
     private Resource _triageNurses;
@@ -24,6 +29,10 @@ public sealed partial class EdSimulation
         _config = config;
         _env = new Simulation(seed);
         _metrics = new EdMetrics();
+
+        // Создаем модели, передавая им конфиг
+        _arrivalModel = new ArrivalModel(_config.ArrivalConfig);
+        _triageModel = new TriageDistributionModel(_config);
     }
 
     public SimResult Run()
@@ -31,6 +40,8 @@ public sealed partial class EdSimulation
         BuildResources();
         StartPatientGenerator();
         StartWarmupHandler();
+        _env.Process(UpdateUtilization(_physicians, (TimeSeriesMonitor)_physicians.Utilization));
+        _env.Process(UpdateUtilization(_treatmentSpaces, (TimeSeriesMonitor)_treatmentSpaces.Utilization));
         _env.Run(_config.SimHorizon);
         return _metrics.Build(_config, _seed, _physicians, _treatmentSpaces);
     }
@@ -76,15 +87,16 @@ public sealed partial class EdSimulation
         int id = 0;
         while (true)
         {
-            var interArrival = _config.ArrivalModel.SampleTriage();
+            var interArrival = _arrivalModel.SampleNext(_env);
             yield return _env.Timeout(interArrival);
 
             var patient = new Patient(
                 id++,
                 _env.Now,
-                _config.TriageModel.SampleTriage(),
+                _triageModel.SampleTriage(_env),
                 IsLowAcuity: _env.Rand(new Uniform(0, 1)) < _config.LowAcuityProbability);
 
+            _metrics.RecordArrival();
             _env.Process(PatientJourney(patient));
         }
     }
@@ -104,5 +116,15 @@ public sealed partial class EdSimulation
         yield return _env.Timeout(_config.Warmup);
 
         foreach (var m in monitors) m.Active = true;
+    }
+
+    private IEnumerable<Event> UpdateUtilization(Resource resource, TimeSeriesMonitor monitor)
+    {
+        while (true)
+        {
+            double load = (double)resource.InUse / resource.Capacity;
+            monitor.UpdateTo(load);
+            yield return _env.Timeout(TimeSpan.FromMinutes(5));
+        }
     }
 }
