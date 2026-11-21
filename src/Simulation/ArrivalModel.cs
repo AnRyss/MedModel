@@ -6,18 +6,19 @@ namespace src.Simulation
 {
     public sealed class ArrivalModel
     {
-        private readonly ArrivalModelType _arrivalModelType;
-        private readonly double[] _hourlyRates;
+        private readonly ArrivalModelConfig _config;
+
 
         public ArrivalModel(ArrivalModelConfig config)
         {
-            _arrivalModelType = config.ArrivalModelType;
-            _hourlyRates = config.HourRates;
+            _config = config;
         }
 
         public TimeSpan SampleNext(SimSharp.Simulation env)
         {
-            switch (_arrivalModelType)
+            var  arrivalModelType = _config.ArrivalModelType;
+       
+            switch (arrivalModelType)
             {
                 case ArrivalModelType.Empirical:
                     return SampleNextEmpirical(env);
@@ -30,11 +31,12 @@ namespace src.Simulation
 
         private TimeSpan SampleNextEmpirical(SimSharp.Simulation env)
         {
+            var hourlyRates = _config.HourRates;
             int currentHour = env.Now.Hour;
-            double rate = _hourlyRates[currentHour];
+            double rate = hourlyRates[currentHour];
 
             // Защита от деления на ноль, если в каком-то часу вдруг 0 пациентов
-            if (rate <= 0) return TimeSpan.FromDays(1);
+            if (rate <= 0) return TimeSpan.FromHours(1);
 
             double meanMinutes = 60.0 / rate;
             var expDist = new ExponentialTime(TimeSpan.FromMinutes(meanMinutes));
@@ -42,8 +44,8 @@ namespace src.Simulation
         }
 
         private TimeSpan SampleNextThinning(SimSharp.Simulation env)
-        {
-            double maxRate = _hourlyRates.Max(); 
+        {  var hourlyRates = _config.HourRates;
+            double maxRate = hourlyRates.Max(); 
             if (maxRate <= 0) return TimeSpan.FromDays(1);
 
             double totalTimeHours = 0;
@@ -56,7 +58,7 @@ namespace src.Simulation
                 virtualNow += interArrivalHours;
 
                 int hour = (int)(virtualNow % 24);
-                double actualRate = _hourlyRates[hour];
+                double actualRate = hourlyRates[hour];
 
                 if (env.Rand(new Uniform(0.0, 1.0)) <= actualRate / maxRate)
                 {
@@ -64,10 +66,13 @@ namespace src.Simulation
                 }
             }
         }
+
+       
     }
 
     public record ArrivalModelConfig(
         ArrivalModelType ArrivalModelType,
+        int? DailyPatients, // Опцианально ограничить дневной потолок пациентов ( среднее Экспоненциального распределения)
         double[] HourRates);
 
     public enum ArrivalModelType

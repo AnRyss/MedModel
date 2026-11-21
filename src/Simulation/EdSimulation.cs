@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MathNet.Numerics.Distributions;
 using MedicalModel.Domain;
 using MedicalModel.Simulation;
 using SimSharp;
@@ -85,8 +86,33 @@ public sealed partial class EdSimulation
     private IEnumerable<Event> PatientArrivalProcess()
     {
         int id = 0;
+        int patientsToday = 0;
+        DateTime currentDay = _env.Now.Date;
+        int? configDailyPatients = _config.ArrivalConfig.DailyPatients ??  1; 
+        var maxDailyPatients = _env.Rand(new Poisson( //TODO: не на каждого пациента создавать новый лимит, перенести обновление на конец дня.
+            (double)configDailyPatients));
+        Console.WriteLine(maxDailyPatients);
         while (true)
         {
+            if (configDailyPatients is not null && configDailyPatients > 1) // ограничиваем количество пациентов в день только, если в конфиге указано число
+            {
+                if (_env.Now.Date > currentDay)
+                {
+                    currentDay = _env.Now.Date;
+                    patientsToday = 0;
+                }
+
+
+                if (patientsToday >= maxDailyPatients)
+                {
+
+                    var nextDay = currentDay.AddDays(1);
+                    var timeToWait = nextDay - _env.Now;
+                    yield return _env.Timeout(timeToWait);
+                    continue;
+                }
+            }
+
             var interArrival = _arrivalModel.SampleNext(_env);
             yield return _env.Timeout(interArrival);
 

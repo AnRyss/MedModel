@@ -11,9 +11,6 @@ namespace MedicalModel
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("=== Запуск симуляции Приемного Отделения (ED) ===");
-            
-            Console.WriteLine("\n--- Сценарий 1: Baseline (3 врача) ---");
             var jsonString = File.ReadAllText("config.json");
             var jsonOpt = new JsonSerializerOptions();
             SimConfig? jsonConfig;
@@ -22,9 +19,11 @@ namespace MedicalModel
 
             jsonConfig = JsonSerializer.Deserialize<SimConfig>(jsonString, jsonOpt)
                          ?? throw new JsonException("Не получилось получить настройки из конфигурации");
-            var simBaseline = new EdSimulation(jsonConfig, seed: 9999);
-            PrintResult(simBaseline.Run(), jsonConfig);
+            var expRunner = new ExperimentRunner();
+            var SimResultsList = expRunner.RunScenario(jsonConfig, 100);
+            ExperimentRunner.PrintResultsBatch(SimResultsList,jsonConfig);
 
+            
             // Сценарий 2: Высокая нагрузка + больше врачей
             var baseHourlyRates = jsonConfig.ArrivalConfig.HourRates;
             var highLoadRates = new double[24];
@@ -33,20 +32,21 @@ namespace MedicalModel
             var highLoadConfig = jsonConfig with
             {
                 Name = "High Load",
-                ArrivalConfig = new ArrivalModelConfig(ArrivalModelType.Thinning, highLoadRates)
+                ArrivalConfig = new ArrivalModelConfig(ArrivalModelType.Thinning,jsonConfig.ArrivalConfig.DailyPatients, highLoadRates)
             };
 
-            Console.WriteLine("\n--- Сценарий 2: High Load + 4 врача ---");
+
             var simHighLoad = new EdSimulation(highLoadConfig, seed: 42);
-            PrintResult(simHighLoad.Run(),jsonConfig);
+            //  PrintResult(simHighLoad.Run(),jsonConfig);
 
             Console.ReadKey();
         }
 
+
         static void PrintResult(SimResult res, SimConfig config)
         {
             Console.WriteLine($"Сценарий: {res.ScenarioName}");
-            Console.WriteLine($"Дней всего: {config.SimHorizon}");
+            Console.WriteLine($"Дней всего: {config.SimHorizon.TotalDays}");
             Console.WriteLine($"Пациентов всего: {res.TotalPatients}");
             Console.WriteLine($"Ушли (LWBS): {res.LwbsCount} ({res.LwbsRate:P1})");
             Console.WriteLine($"Время до врача (P50): {res.DtdtP50:F1} мин");

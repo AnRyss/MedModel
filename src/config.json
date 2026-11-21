@@ -1,25 +1,26 @@
 ﻿{
-  "Name": "Baseline",
+  "Name": "Малое отделение неотложной помощи",
   "NumPhysicians": 2,
   "NumTriageNurses": 5,
   "NumTreatmentSpaces": 40,
-  "NumInpatientBeds": 20,
+  "NumInpatientBeds": 150,
   "SimHorizon": 10, 
-  "Warmup":0, 
-  "BedsOccupiedForDays" : 0.2,
-  "TriageProbabilities":  [0.05, 0.15, 0.30, 0.05, 0.45 ],
+  "Warmup":5, 
+  "BedsOccupiedForDays" : 7.2,
+  "TriageProbabilities":  [0.25, 0.094, 0.37, 0.32, 0.21 ],
 "LwbsPatienceMinutes": 120,
 "LowAcuityProbability": 0.15,
-"AdmissionProbability": 0.5,
+"AdmissionProbability": 0.2,
 "ArrivalConfig": 
 {
   "ArrivalModelType": "Thinning",
+  "DailyPatients":  90,
   "HourRates": [
     1, 1, 2, 2, 3, 3,
     3, 3, 3, 3, 3, 3,
-    4,4,4,4, 5, 5,
+    4,4,4,455, 5, 5,
     3, 2, 2, 2, 2, 1]
 },
 "TriageTimesMeanMinutes": [2.0, 3.0, 4.0, 5.0, 6.0 ],
-"TreatmentTimesMeanMinutes": [120.0, 90.0, 30.0, 20.0, 15.0]
+"TreatmentTimesMeanMinutes": [28.0, 22.0, 22.5, 20.0, 17.0]
 }

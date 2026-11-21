@@ -12,20 +12,30 @@ namespace src.Simulation
 
         public TriageDistributionModel(SimConfig config)
         {
-            _triageProbabilities = config.TriageProbabilities;
-            
-           
+            _triageProbabilities = NormalizeProbs(config.TriageProbabilities);
+
+
             _triageTimes = new IDistribution<TimeSpan>[_triageProbabilities.Length];
             _treatmentTimes = new IDistribution<TimeSpan>[_triageProbabilities.Length];
 
             for (int i = 0; i < _triageProbabilities.Length; i++)
             {
-                // Простое предположение: стандартное отклонение = 20%-40% от среднего
+                // Простое предположение: стандартное отклонение = 20%-70% от среднего
                 double triageMean = config.TriageTimesMeanMinutes[i];
                 double treatmentMean = config.TreatmentTimesMeanMinutes[i];
+                if (i == 0)
+                {
+                    _triageTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(triageMean),
+                        TimeSpan.FromMinutes(triageMean * 0.2));
+                    _treatmentTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(treatmentMean),
+                        TimeSpan.FromMinutes(treatmentMean * 0.7));
+                    continue;
+                }
 
-                _triageTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(triageMean), TimeSpan.FromMinutes(triageMean * 0.2));
-                _treatmentTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(treatmentMean), TimeSpan.FromMinutes(treatmentMean * 0.4));
+                _triageTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(triageMean),
+                    TimeSpan.FromMinutes(triageMean * 0.2));
+                _treatmentTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(treatmentMean),
+                    TimeSpan.FromMinutes(treatmentMean * 0.3));
             }
         }
 
@@ -39,7 +49,20 @@ namespace src.Simulation
                 cumulative += _triageProbabilities[i];
                 if (u < cumulative) return (TriageLevel)(i + 1);
             }
+
             return TriageLevel.NonUrgent;
+        }
+
+        private double[] NormalizeProbs(double[] probs)
+        {
+            var normilizedProbs = new double[probs.Length];
+            var summ = probs.Sum();
+            for (var i = 0; i < probs.Length; i++)
+            {
+                normilizedProbs[i] = probs[i] / summ;
+            }
+
+            return normilizedProbs;
         }
 
         public IDistribution<TimeSpan> Triage(TriageLevel level) => _triageTimes[(int)level - 1];
