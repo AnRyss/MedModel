@@ -19,7 +19,7 @@ public sealed partial class EdSimulation
     private readonly TriageDistributionModel _triageModel;
 
     // Ресурсы
-    private Resource _physicians;
+    private PhysicianPool _physicianPool;
     private Resource _triageNurses;
     private Resource _treatmentSpaces;
     private Resource _inpatientBeds;
@@ -41,20 +41,14 @@ public sealed partial class EdSimulation
         BuildResources();
         StartPatientGenerator();
         StartWarmupHandler();
-        _env.Process(UpdateUtilization(_physicians, (TimeSeriesMonitor)_physicians.Utilization));
-        _env.Process(UpdateUtilization(_treatmentSpaces, (TimeSeriesMonitor)_treatmentSpaces.Utilization));
         _env.Run(_config.SimHorizon);
-        return _metrics.Build(_config, _seed, _physicians, _treatmentSpaces);
+        return _metrics.Build(_config, _seed, , _treatmentSpaces);
     }
 
     private void BuildResources()
     {
-        _physicians = new Resource(_env, _config.NumPhysicians)
-        {
-            Utilization = new TimeSeriesMonitor(_env, "PhysUtil"),
-            WaitingTime = new SampleMonitor("PhysWait", collect: true),
-            QueueLength = new TimeSeriesMonitor(_env, "PhysQueue", collect: true),
-        };
+        _physicianPool = new PhysicianPool(_env,_config.NumPhysicians);
+        
 
         _triageNurses = new Resource(_env, _config.NumTriageNurses)
         {
@@ -84,48 +78,52 @@ public sealed partial class EdSimulation
     }
 
     private IEnumerable<Event> PatientArrivalProcess()
+{
+    int id = 0;
+    int patientsToday = 0;
+
+    DateTime currentDay = _env.Now.Date;
+
+    int? configDailyPatients = _config.ArrivalConfig.DailyPatients;
+
+    int maxDailyPatients = configDailyPatients.HasValue
+        ? _env.Rand(new Poisson(configDailyPatients.Value))
+        : int.MaxValue;
+
+    while (true)
     {
-        int id = 0;
-        int patientsToday = 0;
-        DateTime currentDay = _env.Now.Date;
-        int? configDailyPatients = _config.ArrivalConfig.DailyPatients ??  1; 
-        var maxDailyPatients = _env.Rand(new Poisson( //TODO: не на каждого пациента создавать новый лимит, перенести обновление на конец дня.
-            (double)configDailyPatients));
-        Console.WriteLine(maxDailyPatients);
-        while (true)
+        
+        if (_env.Now.Date > currentDay)
         {
-            if (configDailyPatients is not null && configDailyPatients > 1) // ограничиваем количество пациентов в день только, если в конфиге указано число
-            {
-                if (_env.Now.Date > currentDay)
-                {
-                    currentDay = _env.Now.Date;
-                    patientsToday = 0;
-                }
-
-
-                if (patientsToday >= maxDailyPatients)
-                {
-
-                    var nextDay = currentDay.AddDays(1);
-                    var timeToWait = nextDay - _env.Now;
-                    yield return _env.Timeout(timeToWait);
-                    continue;
-                }
-            }
-
-            var interArrival = _arrivalModel.SampleNext(_env);
-            yield return _env.Timeout(interArrival);
-
-            var patient = new Patient(
-                id++,
-                _env.Now,
-                _triageModel.SampleTriage(_env),
-                IsLowAcuity: _env.Rand(new Uniform(0, 1)) < _config.LowAcuityProbability);
-
-            _metrics.RecordArrival();
-            _env.Process(PatientJourney(patient));
+            currentDay = _env.Now.Date;
+            patientsToday = 0;
+            if (configDailyPatients.HasValue)
+                maxDailyPatients = _env.Rand(new Poisson(configDailyPatients.Value));
         }
+
+       
+        if (configDailyPatients.HasValue && configDailyPatients.Value > 1
+            && patientsToday >= maxDailyPatients)
+        {
+            var nextDay = currentDay.AddDays(1);
+            yield return _env.Timeout(nextDay - _env.Now);
+            continue;
+        }
+
+        var interArrival = _arrivalModel.SampleNext(_env);
+        yield return _env.Timeout(interArrival);
+
+        var patient = new Patient(
+            id++,
+            _env.Now,
+            _triageModel.SampleTriage(_env),
+            IsLowAcuity: _env.Rand(new Uniform(0, 1)) < _config.LowAcuityProbability);
+
+        _metrics.RecordArrival();
+        patientsToday++;                 
+        _env.Process(PatientJourney(patient));
     }
+}
 
     private IEnumerable<Event> StartWarmupHandler()
     {

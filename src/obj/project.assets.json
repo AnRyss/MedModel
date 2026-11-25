@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net10.0": {
       "MathNet.Numerics/5.0.0": {
@@ -175,30 +175,29 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\stefa\\.nuget\\packages\\": {}
+    "C:\\Users\\Андрей\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\stefa\\OneDrive\\Desktop\\MedicalModel\\MedicalModel\\src\\MedicalModel.csproj",
+      "projectUniqueName": "C:\\Users\\Андрей\\Desktop\\Cpro\\MedModel\\MedModel\\src\\MedicalModel.csproj",
       "projectName": "MedicalModel",
-      "projectPath": "C:\\Users\\stefa\\OneDrive\\Desktop\\MedicalModel\\MedicalModel\\src\\MedicalModel.csproj",
-      "packagesPath": "C:\\Users\\stefa\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\stefa\\OneDrive\\Desktop\\MedicalModel\\MedicalModel\\src\\obj\\",
+      "projectPath": "C:\\Users\\Андрей\\Desktop\\Cpro\\MedModel\\MedModel\\src\\MedicalModel.csproj",
+      "packagesPath": "C:\\Users\\Андрей\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Андрей\\Desktop\\Cpro\\MedModel\\MedModel\\src\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\stefa\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\Андрей\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {}
         }
@@ -217,6 +216,7 @@
     },
     "frameworks": {
       "net10.0": {
+        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "MathNet.Numerics": {

@@ -1,10 +1,11 @@
 using SimSharp;
-using System;
+
 
 public sealed partial class EdSimulation
 {
     private IEnumerable<Event> PatientJourney(Patient patient)
     {
+
         var arrivedAt = _env.Now;
         bool treated = false;
 
@@ -16,7 +17,7 @@ public sealed partial class EdSimulation
         }
 
         // 2. ОЖИДАНИЕ ВРАЧА И МЕСТА
-        using (var physician = _physicians.Request())
+        using (var physician = _physicianPool.Acquire())
         using (var space = _treatmentSpaces.Request())
         {
             var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
