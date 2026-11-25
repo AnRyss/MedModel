@@ -17,7 +17,7 @@ public sealed partial class EdSimulation
     // Модели, созданные из данных конфига
     private readonly ArrivalModel _arrivalModel;
     private readonly TriageDistributionModel _triageModel;
-
+private int counter = 0;
     // Ресурсы
     private PhysicianPool _physicianPool;
     private Resource _triageNurses;
@@ -41,8 +41,10 @@ public sealed partial class EdSimulation
         BuildResources();
         StartPatientGenerator();
         StartWarmupHandler();
+        _env.Process(MonitorPhysicianLoad()); 
         _env.Run(_config.SimHorizon);
-        return _metrics.Build(_config, _seed, , _treatmentSpaces);
+            //Console.WriteLine(counter);
+        return _metrics.Build(_config, _seed, _treatmentSpaces);
     }
 
     private void BuildResources()
@@ -85,11 +87,11 @@ public sealed partial class EdSimulation
     DateTime currentDay = _env.Now.Date;
 
     int? configDailyPatients = _config.ArrivalConfig.DailyPatients;
-
+    
     int maxDailyPatients = configDailyPatients.HasValue
         ? _env.Rand(new Poisson(configDailyPatients.Value))
         : int.MaxValue;
-
+   
     while (true)
     {
         
@@ -102,7 +104,7 @@ public sealed partial class EdSimulation
         }
 
        
-        if (configDailyPatients.HasValue && configDailyPatients.Value > 1
+        if (maxDailyPatients > 1
             && patientsToday >= maxDailyPatients)
         {
             var nextDay = currentDay.AddDays(1);
@@ -116,12 +118,14 @@ public sealed partial class EdSimulation
         var patient = new Patient(
             id++,
             _env.Now,
-            _triageModel.SampleTriage(_env),
-            IsLowAcuity: _env.Rand(new Uniform(0, 1)) < _config.LowAcuityProbability);
+            _triageModel.SampleTriage(_env)
+           );
 
         _metrics.RecordArrival();
-        patientsToday++;                 
-        _env.Process(PatientJourney(patient));
+        patientsToday++;
+        var attentionToPatient = _triageModel.TriageLevelToPhysAttention(_env,patient.Triage);
+        _env.Process(PatientJourney(patient, attentionToPatient));
+        counter++;
     }
 }
 
@@ -129,7 +133,7 @@ public sealed partial class EdSimulation
     {
         var monitors = new IMonitor[]
         {
-            _physicians.Utilization, _physicians.WaitingTime, _physicians.QueueLength,
+            
             _triageNurses.Utilization, _triageNurses.WaitingTime, _triageNurses.QueueLength,
             _treatmentSpaces.Utilization, _treatmentSpaces.WaitingTime, _treatmentSpaces.QueueLength,
             _inpatientBeds.Utilization, _inpatientBeds.WaitingTime, _inpatientBeds.QueueLength
@@ -141,14 +145,21 @@ public sealed partial class EdSimulation
 
         foreach (var m in monitors) m.Active = true;
     }
-
-    private IEnumerable<Event> UpdateUtilization(Resource resource, TimeSeriesMonitor monitor)
+    private IEnumerable<Event> MonitorPhysicianLoad()
     {
+        yield return _env.Timeout(_config.Warmup);
+        
         while (true)
         {
-            double load = (double)resource.InUse / resource.Capacity;
-            monitor.UpdateTo(load);
+           
+            double totalLoad = _physicianPool.Physicians.Sum(p => p.CurrentLoad);
+            double averageLoad = totalLoad / _physicianPool.Physicians.Count;
+            _metrics.RecordPhysicianLoad(averageLoad);
+            var hourNow= _env.Now.Hour;
+            _metrics.RecordPhysicianLoadByHour(hourNow,averageLoad);
             yield return _env.Timeout(TimeSpan.FromMinutes(5));
         }
     }
+   
+    
 }

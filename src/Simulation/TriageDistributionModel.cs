@@ -39,6 +39,23 @@ namespace src.Simulation
             }
         }
 
+        public double TriageLevelToPhysAttention(SimSharp.Simulation simulation, TriageLevel level)
+        {
+            double baseAttention = level switch
+            {
+                TriageLevel.Resuscitation => 1.0,
+                TriageLevel.Emergent => 0.8,
+                TriageLevel.Urgent => 0.6,
+                TriageLevel.LessUrgent => 0.4,
+                TriageLevel.NonUrgent => 0.2,
+                _ => 0.2
+            };
+            double deviation = 0.1;
+            var dist = new Normal(baseAttention, deviation);
+            double sample = simulation.Rand(dist);
+            return Math.Clamp(sample, 0.05, 1.0);
+        }
+
         public TriageLevel SampleTriage(SimSharp.Simulation sim)
         {
             double u = sim.Rand(new Uniform(0.0, 1.0));

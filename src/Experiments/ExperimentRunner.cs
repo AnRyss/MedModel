@@ -32,7 +32,7 @@ public sealed class ExperimentRunner
         var list = results.ToList();
         if (list.Count == 0) return;
 
-     
+
         var avgDtdtP50 = list.Average(r => r.DtdtP50);
         var avgDtdtP95 = list.Average(r => r.DtdtP95);
         var avgLosP50 = list.Average(r => r.LosP50);
@@ -43,8 +43,15 @@ public sealed class ExperimentRunner
         var avgBoarding = list.Average(r => r.BoardingMeanMinutes);
         var avgTotalPatients = list.Average(r => r.TotalPatients);
         var avgLwbsCount = list.Average(r => r.LwbsCount);
-
-      
+        var avgPhysUtilByHour = Enumerable.Range(0, 24)
+            .ToDictionary(
+                hour => hour,
+                hour => list
+                    .SelectMany(r =>
+                        r.PhysicianUtilizationByHours.TryGetValue(hour, out var vals) ? vals : new List<double>())
+                    .DefaultIfEmpty(0.0)
+                    .Average()
+            );
         var scenarioName = list.First().ScenarioName;
 
         Console.WriteLine($"Сценарий: {scenarioName}");
@@ -56,8 +63,11 @@ public sealed class ExperimentRunner
         Console.WriteLine($"Время до врача (P95): {avgDtdtP95:F1} мин");
         Console.WriteLine($"Время в отделении (P50): {avgLosP50:F1} мин");
         Console.WriteLine($"Время в отделении (P95): {avgLosP95:F1} мин");
-        Console.WriteLine($"Загрузка врачей: {avgPhysUtil:P1}");
         Console.WriteLine($"Загрузка мест: {avgSpaceUtil:P1}");
         Console.WriteLine($"Среднее ожидание койки: {avgBoarding:F1} мин");
+        Console.WriteLine($"Загрузка врачей: {avgPhysUtil:P1}");
+        avgPhysUtilByHour
+            .ToList()
+            .ForEach(kvp => Console.WriteLine($"Загрузка врачей в {kvp.Key} часов: {kvp.Value:P1}"));
     }
 }

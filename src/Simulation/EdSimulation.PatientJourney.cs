@@ -3,7 +3,7 @@ using SimSharp;
 
 public sealed partial class EdSimulation
 {
-    private IEnumerable<Event> PatientJourney(Patient patient)
+    private IEnumerable<Event> PatientJourney(Patient patient, double attentionToPatient)
     {
 
         var arrivedAt = _env.Now;
@@ -17,14 +17,15 @@ public sealed partial class EdSimulation
         }
 
         // 2. ОЖИДАНИЕ ВРАЧА И МЕСТА
-        using (var physician = _physicianPool.Acquire())
+        using (var physicianRequest = _physicianPool.Acquire(attentionToPatient, patient.Triage))
         using (var space = _treatmentSpaces.Request())
         {
             var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
-            yield return physician | patience;
+            yield return physicianRequest | patience;
 
-            if (!physician.IsProcessed)
+            if (!physicianRequest.IsProcessed)
             {
+              //  Console.WriteLine($"[LWBS] Пациент {patient.Id} ({patient.Triage}) ушел. Время: {_env.Now}, ожидал: {_env.Now - arrivedAt}");
                 _metrics.RecordLwbs(patient, _env.Now - arrivedAt);
                 yield break;
             }
@@ -44,9 +45,6 @@ public sealed partial class EdSimulation
                 var boardingStart = _env.Now;
                 yield return bedReq;
                 _metrics.RecordBoarding(_env.Now - boardingStart);
-
-                // Запускаем ОТДЕЛЬНЫЙ процесс, который будет держать койку 10 дней.
-                // Место в ED освободится, как только мы выйдем из блока using (space).
                 _env.Process(HoldBed(bedReq));
             }
         } // Врач и место в ED освободились
