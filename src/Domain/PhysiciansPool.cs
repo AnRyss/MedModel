@@ -60,7 +60,7 @@ public sealed class PhysicianPool
 
             // Ищем в очереди самого тяжелого пациента, которого может взять этот врач
             LinkedListNode<(double attention, PhysicianRequest request)>? bestNode = null;
-            int highestPriority = int.MaxValue; // Меньше = тяжелее (уровень 1 самый тяжелый)
+            int highestPriority = int.MaxValue; 
 
             var node = _queue.First;
             while (node != null)

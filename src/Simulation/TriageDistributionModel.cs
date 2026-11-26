@@ -70,6 +70,18 @@ namespace src.Simulation
             return TriageLevel.NonUrgent;
         }
 
+        public double AdmitionSampleTriage(SimSharp.Simulation sim, TriageLevel level)
+        {
+            var prob = default(double);
+            switch (level)
+            {
+                case TriageLevel.Resuscitation:
+                    prob = 1;
+                    break;
+                
+            }
+            return 0;
+        }
         private double[] NormalizeProbs(double[] probs)
         {
             var normilizedProbs = new double[probs.Length];
