@@ -1,20 +1,21 @@
 ﻿using System;
+using MedicalModel.Domain;
 using SimSharp;
 using src.Domain;
 
 namespace src.Simulation
 {
     public class TriageDistributionModel
-    {
+    {private readonly double[][] _departmentProbsByLevel; // [уровень][отделение]
         private readonly IDistribution<TimeSpan>[] _triageTimes;
         private readonly IDistribution<TimeSpan>[] _treatmentTimes;
         private readonly double[] _triageProbabilities;
-
+        private  readonly SimConfig _config;
         public TriageDistributionModel(SimConfig config)
         {
             _triageProbabilities = NormalizeProbs(config.TriageProbabilities);
-
-
+            _config = config;
+           
             _triageTimes = new IDistribution<TimeSpan>[_triageProbabilities.Length];
             _treatmentTimes = new IDistribution<TimeSpan>[_triageProbabilities.Length];
 
@@ -36,6 +37,15 @@ namespace src.Simulation
                     TimeSpan.FromMinutes(triageMean * 0.2));
                 _treatmentTimes[i] = new LogNormalTime(TimeSpan.FromMinutes(treatmentMean),
                     TimeSpan.FromMinutes(treatmentMean * 0.3));
+            }
+            _departmentProbsByLevel = new double[5][]; // 5 уровней триажа
+            for (int lvl = 0; lvl < 5; lvl++)
+            {
+                _departmentProbsByLevel[lvl] = new double[config.Departments.Count];
+                for (int dep = 0; dep < config.Departments.Count; dep++)
+                {
+                    _departmentProbsByLevel[lvl][dep] = config.Departments[dep].AdmissionProbsByTriage[lvl];
+                }
             }
         }
 
@@ -69,18 +79,42 @@ namespace src.Simulation
 
             return TriageLevel.NonUrgent;
         }
-
-        public double AdmitionSampleTriage(SimSharp.Simulation sim, TriageLevel level)
+        public DepartmentConfig SampleDepartment(SimSharp.Simulation sim, TriageLevel level)
         {
-            var prob = default(double);
-            switch (level)
+       
+            int levelIndex = (int)level - 1;
+    
+      
+            var probs = _departmentProbsByLevel[levelIndex]; 
+    
+        
+            double sum = probs.Sum();
+            if (sum <= 0)
+                throw new InvalidDataException("Настройки вероятностей для департамента невалидны");
+
+       
+            double u = sim.Rand(new Uniform(0.0, 1.0));
+            double cumulative = 0;
+
+      
+            for (int i = 0; i < probs.Length; i++)
             {
-                case TriageLevel.Resuscitation:
-                    prob = 1;
-                    break;
-                
+                cumulative += probs[i] / sum; 
+                if (u < cumulative)
+                {
+                    return _config.Departments[i]; 
+                }
             }
-            return 0;
+
+        
+            return _config.Departments.Last();
+        }
+        public bool AdmissionSampleFromTriage(SimSharp.Simulation sim, TriageLevel level){
+            double baseProb = _config.AdmissionProbabilitiesByTriage[(int)level - 1];
+            double noise = sim.Rand(new Uniform(-0.05, 0.05));
+            double finalProb = Math.Clamp(baseProb + noise, 0.0, 1.0);
+            double u = sim.Rand(new Uniform(0.0, 1.0));
+            return u < finalProb;
         }
         private double[] NormalizeProbs(double[] probs)
         {

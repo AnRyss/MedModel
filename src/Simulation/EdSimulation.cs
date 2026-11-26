@@ -17,6 +17,8 @@ public sealed partial class EdSimulation
     // Модели, созданные из данных конфига
     private readonly ArrivalModel _arrivalModel;
     private readonly TriageDistributionModel _triageModel;
+    
+    private readonly Dictionary<string, DepartmentPool> _departmentPools = new();
 private int counter = 0;
     // Ресурсы
     private PhysicianPool _physicianPool;
@@ -50,7 +52,11 @@ private int counter = 0;
     private void BuildResources()
     {
         _physicianPool = new PhysicianPool(_env,_config.NumPhysicians);
-        
+        foreach (var deptConfig in _config.Departments)
+        {
+            var pool = new DepartmentPool(_env, deptConfig);
+            _departmentPools.Add(deptConfig.Name, pool);
+        }
 
         _triageNurses = new Resource(_env, _config.NumTriageNurses)
         {

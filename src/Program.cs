@@ -20,7 +20,7 @@ namespace MedicalModel
             jsonConfig = JsonSerializer.Deserialize<SimConfig>(jsonString, jsonOpt)
                          ?? throw new JsonException("Не получилось получить настройки из конфигурации");
             var expRunner = new ExperimentRunner();
-            var SimResultsList = expRunner.RunScenario(jsonConfig, 10);
+            var SimResultsList = expRunner.RunScenario(jsonConfig, 1);
             ExperimentRunner.PrintResultsBatch(SimResultsList,jsonConfig);
 
             
