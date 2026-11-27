@@ -46,17 +46,21 @@ private int counter = 0;
         _env.Process(MonitorPhysicianLoad()); 
         _env.Run(_config.SimHorizon);
             //Console.WriteLine(counter);
-        return _metrics.Build(_config, _seed, _treatmentSpaces);
+        return _metrics.Build(_config, _seed, _treatmentSpaces,_departmentPools);
     }
 
     private void BuildResources()
     {
         _physicianPool = new PhysicianPool(_env,_config.NumPhysicians);
+
+
         foreach (var deptConfig in _config.Departments)
         {
             var pool = new DepartmentPool(_env, deptConfig);
             _departmentPools.Add(deptConfig.Name, pool);
         }
+
+
 
         _triageNurses = new Resource(_env, _config.NumTriageNurses)
         {

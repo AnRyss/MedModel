@@ -13,6 +13,7 @@ public sealed record SimResult(
     double PhysicianUtilization,
     Dictionary<int, List<double>> PhysicianUtilizationByHours,
     double SpaceUtilization,
+    IReadOnlyDictionary<string, DepartmentUtilizationStats> DepartmentUtilization,
     double BoardingMeanMinutes,
     int TotalPatients,
     int LwbsCount);

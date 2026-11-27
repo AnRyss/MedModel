@@ -19,68 +19,69 @@ public sealed partial class EdSimulation
 
         // 2. ОЖИДАНИЕ ВРАЧА И МЕСТА
         var physicianRequest = _physicianPool.Acquire(attentionToPatient, patient.Triage);
-       
-            var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
-            yield return physicianRequest | patience;
 
-            if (!physicianRequest.IsProcessed)
-            {
-                _metrics.RecordLwbs(patient, _env.Now - arrivedAt);
-                physicianRequest.Dispose();
-                yield break;
-            }
+        var patience = _env.Timeout(TimeSpan.FromMinutes(_config.LwbsPatienceMinutes));
+        yield return physicianRequest | patience;
 
-            using (var space = _treatmentSpaces.Request())
-            {
-                yield return space;
-                _metrics.RecordDtdt(patient, _env.Now - arrivedAt);
-                treated = true;
+        if (!physicianRequest.IsProcessed)
+        {
+            _metrics.RecordLwbs(patient, _env.Now - arrivedAt);
+            physicianRequest.Dispose();
+            yield break;
+        }
 
-                yield return _env.Timeout(_triageModel.Treatment(patient.Triage));
-                physicianRequest.Dispose(); // doctor release
+        using (var space = _treatmentSpaces.Request())
+        {
+            yield return space;
+            _metrics.RecordDtdt(patient, _env.Now - arrivedAt);
+            treated = true;
 
+            yield return _env.Timeout(_triageModel.Treatment(patient.Triage));
+            physicianRequest.Dispose(); // doctor release
+            
 
-                bool admit = _triageModel.AdmissionSampleFromTriage(_env, patient.Triage);
-             
-                // 
-
-                if (admit)
-                {
-                    var depConfig = _triageModel.SampleDepartment(_env,patient.Triage);
-                    _departmentPools.TryGetValue(depConfig.Name, out var depPool);
-                    if (depPool is null)
-                        throw new KeyNotFoundException($" Ошибка при получении отделения{depConfig.Name}");
-                    // Ждем койку (Boarding),  уже не занимая место в приемке
-                    var bedReq = depPool.InpatientBeds.Request();
-                    var boardingStart = _env.Now;
-                    var maxBoardingTime = _env.Timeout(TimeSpan.FromHours(24));
-
-                    yield return bedReq | maxBoardingTime;
-
-                    if (!maxBoardingTime.IsTriggered)
-                    {
-                        _metrics.RecordBoarding(_env.Now - boardingStart);
-                        _env.Process(HoldBed(bedReq, depPool.Config.AvgOccupationDays)); 
-                    }
-                    else
-                    {
-                        _metrics.RecordBoarding(TimeSpan.FromHours(24));
-                    }
-                }
-            }
+            bool admit = _triageModel.AdmissionSampleFromTriage(_env, patient.Triage);
 
             if (treated)
                 _metrics.RecordLos(patient, _env.Now - arrivedAt);
-        
+
+            if (admit)
+            {
+                var depConfig = _triageModel.SampleDepartment(_env, patient.Triage);
+                _departmentPools.TryGetValue(depConfig.Name, out var depPool);
+                if (depPool is null)
+                    throw new KeyNotFoundException($" Ошибка при получении отделения{depConfig.Name}");
+                // Ждем койку (Boarding),  уже не занимая место в приемке
+                var bedReq = depPool.InpatientBeds.Request();
+                var boardingStart = _env.Now;
+                var maxBoardingTime = _env.Timeout(TimeSpan.FromHours(24));
+
+                yield return bedReq | maxBoardingTime;
+
+                if (!maxBoardingTime.IsTriggered)
+                {
+                    _metrics.RecordBoarding(_env.Now - boardingStart);
+                    _env.Process(HoldBed(bedReq, depPool.Config.AvgOccupationDays));
+                }
+                else
+                {
+                    bedReq.Dispose(); 
+                    _metrics.RecordBoarding(TimeSpan.FromHours(24));
+                }
+            }
+        }
+
+
+
     }
 
-   
+
     private IEnumerable<Event> HoldBed(Request bedReq, double days)
     {
         using (bedReq)
         {
-          
-            yield return _env.Timeout(TimeSpan.FromDays(days)); 
+
+            yield return _env.Timeout(TimeSpan.FromDays(days));
         }
     }
 }

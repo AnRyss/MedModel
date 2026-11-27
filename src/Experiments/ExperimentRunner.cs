@@ -52,6 +52,28 @@ public sealed class ExperimentRunner
                     .DefaultIfEmpty(0.0)
                     .Average()
             );
+        var deptNames = list
+.SelectMany(r => r.DepartmentUtilization.Keys)
+.Distinct()
+.OrderBy(n => n);
+
+        var avgDepartmentStats = deptNames.ToDictionary(
+            name => name,
+            name =>
+            {
+                var stats = list
+                    .Where(r => r.DepartmentUtilization.ContainsKey(name))
+                    .Select(r => r.DepartmentUtilization[name])
+                    .ToList();
+
+                return new DepartmentUtilizationStats(
+                    DepartmentName: name,
+                    Mean: stats.Average(s => s.Mean),
+                    P50: stats.Average(s => s.P50),
+                    P95: stats.Average(s => s.P95),
+                    Max: stats.Average(s => s.Max)
+                );
+            });
         var scenarioName = list.First().ScenarioName;
 
         Console.WriteLine($"Сценарий: {scenarioName}");
@@ -69,5 +91,12 @@ public sealed class ExperimentRunner
         avgPhysUtilByHour
             .ToList()
             .ForEach(kvp => Console.WriteLine($"Загрузка врачей в {kvp.Key} часов: {kvp.Value:P1}"));
+        Console.WriteLine("Загрузка коек по департаментам:");
+        foreach (var (name, s) in avgDepartmentStats)
+        {
+            Console.WriteLine(
+                $"  {name}: mean={s.Mean:P1}, p50={s.P50:P1}, p95={s.P95:P1}, max={s.Max:P1}");
+        }
+
     }
 }
