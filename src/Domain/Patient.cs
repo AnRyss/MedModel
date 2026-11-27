@@ -4,7 +4,7 @@ public enum TriageLevel { Resuscitation = 1, Emergent = 2, Urgent = 3, LessUrgen
 public sealed record Patient(
     int Id,
     DateTime ArrivalTime,
-    TriageLevel Triage,
-    bool IsLowAcuity);          // TODO: пока не понятно че с этим делать. Нигде не используется
+    TriageLevel Triage);
+        
 
 

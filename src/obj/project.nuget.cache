@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "MiyM8B6YLWE=",
+  "dgSpecHash": "2m6L/q3K5bo=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Андрей\\Desktop\\Cpro\\MedModel\\MedModel\\src\\MedicalModel.csproj",
+  "projectFilePath": "C:\\Users\\stefa\\OneDrive\\Desktop\\MedicalModel\\MedicalModel\\src\\MedicalModel.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Андрей\\.nuget\\packages\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
-    "C:\\Users\\Андрей\\.nuget\\packages\\microsoft.ui.reactor\\0.1.0-preview.18\\microsoft.ui.reactor.0.1.0-preview.18.nupkg.sha512",
-    "C:\\Users\\Андрей\\.nuget\\packages\\simsharp\\3.4.2\\simsharp.3.4.2.nupkg.sha512"
+    "C:\\Users\\stefa\\.nuget\\packages\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
+    "C:\\Users\\stefa\\.nuget\\packages\\microsoft.ui.reactor\\0.1.0-preview.18\\microsoft.ui.reactor.0.1.0-preview.18.nupkg.sha512",
+    "C:\\Users\\stefa\\.nuget\\packages\\simsharp\\3.4.2\\simsharp.3.4.2.nupkg.sha512"
   ],
   "logs": []
 }
